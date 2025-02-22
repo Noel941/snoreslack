@@ -17,6 +17,7 @@ export const useAuthStore = create((set) => ({
 
     checkAuth: async () => {
         try {
+            // Fetches authentication details
             const authDetails = getStoredAuthDetails();
             if (!authDetails) {
                 console.error("Auth details missing from localStorage");
@@ -24,7 +25,7 @@ export const useAuthStore = create((set) => ({
                 return;
             }
 
-            // Validate authentication
+            // Send an API request and validate authentication
             const res = await axiosInstance.get('/auth/validate_token', {
                 headers: {
                     "access-token": authDetails.accessToken,
@@ -33,7 +34,7 @@ export const useAuthStore = create((set) => ({
                     uid: authDetails.uid,
                 }
             });
-
+            // if success = update : if fail = clear
             if (res.data && res.data.success) {
                 set({ authUser: res.data.data });
                 console.log("Auth validated:", res.data);
@@ -51,6 +52,7 @@ export const useAuthStore = create((set) => ({
 
     signup: async (data) => {
         set({ isSigningUp: true });
+        // extrect user data and validate
         try {
             const { email, password, password_confirmation } = data;
 
@@ -60,11 +62,12 @@ export const useAuthStore = create((set) => ({
             if (password !== password_confirmation) {
                 throw new Error("Passwords do not match");
             }
+            // use regular expression
             const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
             if (!emailPattern.test(email)) {
                 throw new Error("Invalid email format");
             }
-
+            // Send a post request
             const res = await axiosInstance.post('/api/v1/auth/', {
                 email,
                 password,
@@ -79,7 +82,7 @@ export const useAuthStore = create((set) => ({
             const { token, user } = res.data;
             saveToLocalStorage('auth_token', token);
             saveToLocalStorage('user_info', user);
-
+            // updated state
             set({ authUser: res.data });
             toast.success("Account created Successfully");
 
@@ -95,6 +98,7 @@ export const useAuthStore = create((set) => ({
     login: async (data) => {
         set({ isLoggingIn: true });
         try {
+            // send request w/ credentials
             const res = await axiosInstance.post("/auth/sign_in", data);
 
             const authHeaders = {
@@ -103,11 +107,11 @@ export const useAuthStore = create((set) => ({
                 expiry: res.headers["expiry"],
                 uid: res.headers["uid"]
             };
-            // login if only all credentials are present
+            // extract and login if only all credentials are present
             if (Object.values(authHeaders).some(value => !value)) {
                 throw new Error("Missing authentication headers");
             }
-            // loop through object to store authheaders in local
+            // convert and loop through object to store authheaders in local
             Object.entries(authHeaders).forEach(([key, value]) => localStorage.setItem(key, value));
             localStorage.setItem("user_info", JSON.stringify(res.data.data));
 
@@ -123,7 +127,7 @@ export const useAuthStore = create((set) => ({
 
     logout: async () => {
         try {
-            // Remove local storage
+            // Remove data local storage
             localStorage.removeItem('auth_token');
             localStorage.removeItem('user_info');
 

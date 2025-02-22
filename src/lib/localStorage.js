@@ -1,10 +1,15 @@
+
+// store data under key
+
 export function saveToLocalStorage(key, value) {
-    if (typeof value === "string" || typeof value === "number") { // fixed typo ("nubmer" -> "number")
+    // check (if value is string and number) and (if not convert)
+    if (typeof value === "string" || typeof value === "number") {
         localStorage.setItem(key, value);
     } else {
         localStorage.setItem(key, JSON.stringify(value));
     }
 }
+// retrieve value using keuy
 // wrap parse in try-catch if stored data is not in correct format
 export function getItemFromLocalStorage(key) {
     const value = localStorage.getItem(key);
@@ -18,6 +23,9 @@ export function getItemFromLocalStorage(key) {
         return null;
     }
 }
+
+// retirieve tokens and user data 
+// ensure all credentials are present
 
 export const getStoredAuthDetails = () => {
 

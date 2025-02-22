@@ -1,18 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Hash } from 'lucide-react';
+import { Users, Hash, Search } from 'lucide-react';
 import { useChatStore } from '../store/useChatStore';
 import { useAuthStore } from '../store/useAuthStore';
 import avatar from '../image/avatar.png';
 
 const Sidebar = () => {
-    const { getUsers, users = [], selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
-    const { getChannels, channels = [], setSelectedChannel, selectedChannel } = useChatStore();
+    const { getUsers, users = [], selectedUser, setSelectedUser, isUsersLoading, channels, getChannels, setSelectedChannel, selectedChannel, getMessages } = useChatStore();
     const [activeTab, setActiveTab] = useState('contacts');
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         getUsers();
         getChannels();
     }, []);
+
+    useEffect(() => {
+        if (users.length > 0) {
+            console.log("Sample User Data:", users[0]);
+        }
+    }, [users]);
+
+    const handleChannelClick = (channel) => {
+        setSelectedChannel(channel);
+        getMessages(channel.id, 'Channel');
+    };
+
+    const filteredUsers = users.filter(user =>
+        (user.email && typeof user.email === 'string' && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (user._id && String(user._id).includes(searchTerm))
+    );
 
     return (
         <aside className='h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200'>
@@ -33,10 +49,25 @@ const Sidebar = () => {
 
             {activeTab === 'contacts' && (
                 <div className="overflow-y-auto w-full py-3">
-                    {users.length === 0 ? (
+                    <div className="p-2">
+                        <div className="relative">
+                            <Search className="absolute left-2 top-3 text-gray-400 size-5" />
+                            <input
+                                type="text"
+                                className="w-full pl-8 pr-2 py-2 border rounded-lg text-black"
+                                placeholder="Search users..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    console.log("Search Term:", e.target.value);
+                                    setSearchTerm(e.target.value);
+                                }}
+                            />
+                        </div>
+                    </div>
+                    {filteredUsers.length === 0 ? (
                         <div className="text-center text-gray-500">No users found. Try refreshing.</div>
                     ) : (
-                        users.map((user, index) => (
+                        filteredUsers.map((user, index) => (
                             <button
                                 key={user._id || index}
                                 onClick={() => setSelectedUser(user)}
@@ -63,8 +94,8 @@ const Sidebar = () => {
                         channels.map((channel) => (
                             <button
                                 key={channel.id}
-                                onClick={() => setSelectedChannel(channel.id)}
-                                className={`w-full p-3 flex items-center gap-3 hover:bg-primary transition-colors ${selectedChannel === channel.id ? "bg-base-300 text-primary-content ring-2 ring-primary" : ""}`}
+                                onClick={() => handleChannelClick(channel)}
+                                className={`w-full p-3 flex items-center gap-3 hover:bg-primary transition-colors ${selectedChannel?.id === channel.id ? "bg-base-300 text-primary-content ring-2 ring-primary" : ""}`}
                             >
                                 <div className="relative mx-auto lg:mx-0">
                                     <Hash className="size-6 text-gray-400" />

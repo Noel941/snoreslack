@@ -1,10 +1,12 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
-import { getStoredAuthDetails } from "../lib/localStorage";
+import { getStoredAuthDetails, getItemFromLocalStorage } from "../lib/localStorage";
 import { useAuthStore } from '../store/useAuthStore'
 import { data } from "react-router-dom";
 
+
+// update and retrieve currnet state
 export const useChatStore = create((set, get) => ({
     messages: [],
     users: [],
@@ -76,6 +78,7 @@ export const useChatStore = create((set, get) => ({
         }
     },
 
+    // fetch users 
     getUsers: async () => {
 
         const accessToken = localStorage.getItem("access-token");
@@ -83,6 +86,7 @@ export const useChatStore = create((set, get) => ({
         const expiry = localStorage.getItem("expiry");
         const uid = localStorage.getItem("uid");
 
+        // check details if missing
         if (!accessToken || !client || !expiry || !uid) {
             console.error("Auth details are missing or invalid.");
             toast.error("Authentication details are missing.");
@@ -104,6 +108,7 @@ export const useChatStore = create((set, get) => ({
 
             console.log("Full API Response:", res.data);
 
+            // store and if invalid empty
             if (res.data && Array.isArray(res.data.data)) {
                 //  Use res.data.data because API returns users in data not inside users 
                 set({ users: res.data.data });
@@ -129,6 +134,8 @@ export const useChatStore = create((set, get) => ({
         }
     },
 
+
+    // fetch messages
     getMessages: async () => {
         set({ isMessagesLoading: true });
 
